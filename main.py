@@ -15,17 +15,11 @@ logging.basicConfig(
     datefmt="%Y-%m-%d %H:%M:%S"
 )
 
-@asynccontextmanager
-async def lifespan(app: FastAPI):
-    await create_tables()
-    yield
-
 
 app = FastAPI(
     title="Employee App",
     description="A simple employee management application",
     version="1.0.0",
-    lifespan=lifespan
 )
 
 configure_middleware(app)

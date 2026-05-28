@@ -21,7 +21,6 @@ async def create(db: AsyncSession, employee:Employee) -> Employee:
 
 
 async def get_all(db: AsyncSession) -> list[Employee]:
-    print("emp repo")
     stmt = select(Employee).where(Employee.deleted_at.is_(None))
     result = await db.scalars(stmt)
 

@@ -12,7 +12,11 @@ from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_asyn
 
 from config import DATABASE_URL
 from database.base import Base
+from sqlalchemy.orm import DeclarativeBase
 
+
+class Base(DeclarativeBase):
+    """Base class for ORM mapped classes (entities)."""
 
 engine = create_async_engine(DATABASE_URL, echo=False, pool_size=10, max_overflow=20)
 AsyncSessionLocal = async_sessionmaker(engine, expire_on_commit=False)
@@ -28,12 +32,5 @@ async def create_tables() -> None:
     """Create tables for all ORM models that inherit from Base."""
     import models.employee  # noqa: F401 — registers the mapper before create_all
 
-    async with engine.begin() as conn:
-        await conn.run_sync(Base.metadata.create_all)
-
-async def create_tables() -> None:
-    """Create tables for all ORM models that inherit from Base."""
-    import models.employee  # noqa: F401 — registers the mapper before create_all
-    
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)

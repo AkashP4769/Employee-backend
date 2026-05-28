@@ -20,7 +20,10 @@ async def create_employee(body: dict = Body(...), db: AsyncSession = Depends(get
 
 @router.get("", response_model=None)
 async def get_all_employees(db: AsyncSession = Depends(get_db)) -> list[Employee]:
-    employees = await employee_service.get_all_emp(db)
+    employees: Employee = await employee_service.get_all_emp(db)
+    print(employees[0].metadata)
+    print(f"{employees}")
+    isinstance(employees[0], Employee)
 
     return [emp.to_api_dict() for emp in employees]
 
@@ -37,7 +40,6 @@ async def patch_employee(body: dict = Body(...), db: AsyncSession = Depends(get_
     id = body.get("id", None)
     name = body.get("name", None)
     email = body.get("email", None)
-
     employee: Employee = Employee(id=id, name=name, email=email)
 
     patched_employee: Employee = await employee_service.patch_employee(db, employee=employee)
