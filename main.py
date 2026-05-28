@@ -5,8 +5,6 @@ from fastapi import Body, Depends, FastAPI, HTTPException, status
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
-from dataclasses import dataclass
-from typing import TypedDict
 from sqlalchemy import select
 import uvicorn
 import logging
@@ -15,27 +13,6 @@ from database.connection import create_tables, get_db
 from middleware.logger import RequestLoggingMiddleware
 from models.employee import Employee
 
-# @dataclass
-# class EmployeeCreate(TypedDict):
-#     first_name: str
-#     last_name: str
-#     age: int
-
-# class EmployeePatch(TypedDict):
-#     id: int
-#     first_name: str | None
-#     last_name: str | None
-#     age: int | None
-
-
-# class Employee(TypedDict):
-#     id: int
-#     first_name: str
-#     last_name: str
-#     age: int
-
-_employees = {}
-_next_id = 0
 
 logging.basicConfig(
     level=logging.INFO,
@@ -66,68 +43,6 @@ app.add_middleware(
     expose_headers=["X-Process-Time"],
 )
 
-# @app.get("/", tags=["Home"], response_model=dict)
-# def welcome():
-#     return {"message": "Welcome to employee app"}
-
-# @app.get("/employee", tags=["Employee"], response_model=list[Employee])
-# def get_employee():
-#     global _employees
-
-#     emps = [Employee(emp) for emp_id, emp in _employees.items()]
-#     return emps
-
-# @app.get("/employee/{emp_id}", tags=["Employee"], response_model=Employee)
-# def get_employee(emp_id: int):
-#     global _employees
-
-#     emp = _employees.get(emp_id, None)
-#     if emp is None:
-#         raise HTTPException(status_code=404, detail="Employee not found")
-
-#     return Employee(emp)
-
-# @app.post("/employee", tags=["Employee"], response_model=Employee)
-# def create_employee(emp: EmployeeCreate):
-#     global _next_id
-#     global _employees
-
-#     emp_map = {
-#         "id": _next_id,
-#         "first_name": emp["first_name"],
-#         "last_name": emp["last_name"],
-#         "age": emp["age"]
-#     }
-
-#     _employees[_next_id] = emp_map
-#     _next_id += 1
-
-#     return Employee(emp_map)
-
-# @app.patch("/employee", tags=["Employee"], response_model=Employee)
-# def patch_employee(data: EmployeePatch):
-#     emp = _employees.get(data["id"], None)
-#     if emp is None:
-#         raise HTTPException(status_code=404, detail="Employee not found")
-
-#     for key, value in data.items():
-#         if key in emp and key != "id":
-#             emp[key] = value
-
-#     _employees[emp["id"]] = emp
-
-#     return Employee(emp)
-
-# @app.delete("/employee/{emp_id}", tags=["Employee"], response_model=Employee)
-# def delete_employee(emp_id: int):
-#     emp = _employees.get(emp_id, None)
-#     if emp is None:
-#         raise HTTPException(status_code=404, detail="Employee not found")
-
-#     del _employees[emp_id]
-#     return Employee(emp)
-
-# DB routes
 
 @app.get("/employee", tags=["Employees"])
 async def get_all_employees(db: AsyncSession = Depends(get_db), ):
