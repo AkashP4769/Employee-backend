@@ -34,13 +34,7 @@ async def get_employee(db: AsyncSession, user_id: int) -> Employee:
     return result.first()
 
 
-async def patch_employee(db: AsyncSession, original_employee: Employee, new_employee: Employee) -> Employee:
-    if new_employee.name is not None:
-        original_employee.name = new_employee.name
-
-    if new_employee.email is not None:
-        original_employee.email = new_employee.email
-
+async def patch_employee(db: AsyncSession, original_employee: Employee) -> Employee:
     try:
         await db.commit()
     except IntegrityError as e:
@@ -64,3 +58,12 @@ async def delete_employee(db: AsyncSession, employee: Employee) -> Employee:
     
     await db.refresh(employee)
     return employee
+
+
+async def get_by_email(db: AsyncSession, email: str) -> Employee:
+    stmt = select(Employee).where(
+        Employee.name == email,
+        Employee.deleted_at.is_(None)
+    )
+
+    return await db.scalars(stmt).first()

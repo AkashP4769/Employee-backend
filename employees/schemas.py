@@ -33,8 +33,17 @@ class AddressCreate(BaseModel):
 class EmployeeCreate(BaseModel):
     name: str = Field(min_length=3, max_length=100)
     email: EmailStr
+    password: str = Field(min_length=6, )
     age: int = Field(ge=18, le=69)
     address: AddressCreate | None
+
+class EmployeePatch(BaseModel):
+    name: str = Field(min_length=3, max_length=100, default=None)
+    email: EmailStr | None
+    password: str = Field(min_length=6, default=None)
+    age: int = Field(ge=18, le=69, default=None) 
+    address: AddressCreate | None
+    
 
 class EmployeeResponse(BaseModel):
     id: int
