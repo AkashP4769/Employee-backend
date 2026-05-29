@@ -1,46 +1,54 @@
+import asyncio
 from logging.config import fileConfig
 
-from sqlalchemy import engine_from_config
 from sqlalchemy import pool
+from sqlalchemy.engine import Connection
+from sqlalchemy.ext.asyncio import async_engine_from_config
 
 from alembic import context
 
-# this is the Alembic Config object, which provides
-# access to the values within the .ini file in use.
+from config import DATABASE_URL
+from database import Base
+
+# Import every ORM module so each Table registers on Base.metadata.
+# `target_metadata` below is only as complete as these imports — a missing import
+# makes `--autogenerate` think a table should be DROPPED. This is the #1 autogenerate gotcha.
+# import models.address  # noqa: F401
+# import models.associations  # noqa: F401
+# import models.department  # noqa: F401
+
+import models.employee  # noqa: F401
+import models.address
+
 config = context.config
 
-# Interpret the config file for Python logging.
-# This line sets up loggers basically.
+# Wire Python logging from alembic.ini ([loggers]/[handlers]/...). Optional but lets
+# students see "Running upgrade c8f01 -> c8f02" output during a migration.
 if config.config_file_name is not None:
     fileConfig(config.config_file_name)
 
-# add your model's MetaData object here
-# for 'autogenerate' support
-# from myapp import mymodel
-# target_metadata = mymodel.Base.metadata
-target_metadata = None
+# The "desired" schema: built from the ORM models above. Autogenerate diffs THIS
+# against the live database's actual schema (via SQLAlchemy's Inspector).
+target_metadata = Base.metadata
 
-# other values from the config, defined by the needs of env.py,
-# can be acquired:
-# my_important_option = config.get_main_option("my_important_option")
-# ... etc.
+
+def get_url() -> str:
+    """Single source of the DB URL — the app's DATABASE_URL, not a copy in alembic.ini.
+    Avoids the classic "migrated the wrong database" mistake of a stale ini URL."""
+    return DATABASE_URL
 
 
 def run_migrations_offline() -> None:
-    """Run migrations in 'offline' mode.
+    """OFFLINE apply mode (`alembic upgrade head --sql`): render SQL, do not connect.
 
-    This configures the context with just a URL
-    and not an Engine, though an Engine is acceptable
-    here as well.  By skipping the Engine creation
-    we don't even need a DBAPI to be available.
-
-    Calls to context.execute() here emit the given string to the
-    script output.
-
+    No Engine is created, so no DBAPI/driver is ever imported — the `+asyncpg`
+    token in the URL is harmless here. Alembic only uses the dialect to COMPILE
+    PostgreSQL DDL; the same SQL is emitted regardless of driver. (This mirrors
+    the stock `alembic init -t async` template, which passes the URL unchanged.)
+    `literal_binds=True` inlines parameter values so the emitted SQL is runnable as-is.
     """
-    url = config.get_main_option("sqlalchemy.url")
     context.configure(
-        url=url,
+        url=get_url(),
         target_metadata=target_metadata,
         literal_binds=True,
         dialect_opts={"paramstyle": "named"},
@@ -50,28 +58,45 @@ def run_migrations_offline() -> None:
         context.run_migrations()
 
 
-def run_migrations_online() -> None:
-    """Run migrations in 'online' mode.
+def do_run_migrations(connection: Connection) -> None:
+    """Shared online-apply body. Runs on a real connection.
 
-    In this scenario we need to create an Engine
-    and associate a connection with the context.
-
+    compare_type / compare_server_default sharpen `--autogenerate` so it notices
+    column TYPE and DEFAULT changes (off by default). They only affect autogenerate
+    diffing, not hand-written upgrade()/downgrade() calls.
     """
-    connectable = engine_from_config(
-        config.get_section(config.config_ini_section, {}),
+    context.configure(
+        connection=connection,
+        target_metadata=target_metadata,
+        compare_type=True,
+        compare_server_default=True,
+    )
+
+    with context.begin_transaction():
+        context.run_migrations()
+
+
+async def run_async_migrations() -> None:
+    """ONLINE apply mode: open an async engine (asyncpg), then hand the sync-style
+    Alembic migration body to `connection.run_sync` so Alembic's synchronous API
+    runs correctly on top of the async driver."""
+    connectable = async_engine_from_config(
+        {"sqlalchemy.url": get_url()},
         prefix="sqlalchemy.",
         poolclass=pool.NullPool,
     )
 
-    with connectable.connect() as connection:
-        context.configure(
-            connection=connection, target_metadata=target_metadata
-        )
+    async with connectable.connect() as connection:
+        await connection.run_sync(do_run_migrations)
 
-        with context.begin_transaction():
-            context.run_migrations()
+    await connectable.dispose()
 
 
+def run_migrations_online() -> None:
+    asyncio.run(run_async_migrations())
+
+
+# Entry point: Alembic decides offline vs online from the `--sql` flag.
 if context.is_offline_mode():
     run_migrations_offline()
 else:

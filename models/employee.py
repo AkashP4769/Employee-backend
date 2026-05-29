@@ -5,8 +5,8 @@ Employee entity — ORM mapped class for table `employees`.
 from datetime import datetime
 from typing import Any, Optional
 
-from sqlalchemy import DateTime, Integer, String, func
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy import DateTime, ForeignKey, Integer, String, func
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from models import Entity
 
@@ -21,24 +21,15 @@ class Employee(Entity):
     __abstract__ = False
     __tablename__ = "employees"
 
-    # id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True, index=True)
-
     name: Mapped[str] = mapped_column(String(100), nullable=False)
     email: Mapped[str] = mapped_column(String(255), nullable=False, unique=True)
-    age: Mapped[int] = mapped_column(Integer, nullable=False)
+    age: Mapped[int] = mapped_column(Integer, nullable=True)
 
-    # created_at: Mapped[datetime] = mapped_column(
-    #     DateTime(timezone=True),
-    #     server_default=func.now(),
-    #     nullable=False,
-    # )
-    # updated_at: Mapped[Optional[datetime]] = mapped_column(
-    #     DateTime(timezone=True),
-    #     server_default=func.now(),
-    #     onupdate=func.now(),
-    #     nullable=True,
-    # )
-    # deleted_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True)
+    addresses: Mapped[list["Address"]] = relationship(
+        "Address",
+        back_populates="employee",
+        cascade="all, delete-orphan"
+    )
 
     def to_api_dict(self) -> dict[str, Any]:
         """JSON-friendly representation (ISO 8601 for timestamps)."""

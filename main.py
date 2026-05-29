@@ -1,12 +1,10 @@
-from contextlib import asynccontextmanager
 from fastapi import FastAPI
 import uvicorn
 import logging
 
 from middleware import configure_middleware
-from database.connection import create_tables
-from routers.employee_router import router as employee_router
-from config import APP_ENV
+from employees.router import router as employee_router
+from config import setting
 
 
 logging.basicConfig(
@@ -27,7 +25,7 @@ app.include_router(employee_router)
 
 @app.get("/health", tags=["health"])
 def health():
-    return {"message": f"App is healthy. Environment: {APP_ENV}"}
+    return {"message": f"App is healthy. Environment: {setting.app_env}"}
 
 if __name__ == "__main__":
     uvicorn.run(app, host="localhost", port=8000, reload=True)
