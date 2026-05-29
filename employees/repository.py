@@ -1,11 +1,10 @@
-from fastapi import HTTPException, status
-from sqlalchemy import Sequence, select
+from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 from datetime import datetime
 
 from models.employee import Employee
-from exceptions import ConflictException
+from exceptions import ConflictException, AppException
 
 
 async def create(db: AsyncSession, employee:Employee) -> Employee:
@@ -42,12 +41,11 @@ async def patch_employee(db: AsyncSession, original_employee: Employee, new_empl
     if new_employee.email is not None:
         original_employee.email = new_employee.email
 
-    # db.add(original_employee)
     try:
         await db.commit()
-    except IntegrityError:
+    except IntegrityError as e:
         await db.rollback()
-        raise ConflictException(detail=f"Integrity error")
+        raise AppException(detail=f"Something went wrong: {str(e)}")
     
     await db.refresh(original_employee)
 
@@ -60,9 +58,9 @@ async def delete_employee(db: AsyncSession, employee: Employee) -> Employee:
     db.add(employee)
     try:
         await db.commit()
-    except IntegrityError:
+    except IntegrityError as e:
         await db.rollback()
-        raise ConflictException(detail=f"Integrity error")
+        raise AppException(detail=f"Something went wrong: {str(e)}")
     
     await db.refresh(employee)
     return employee
