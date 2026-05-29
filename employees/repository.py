@@ -5,6 +5,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from datetime import datetime
 
 from models.employee import Employee
+from exceptions import ConflictException
 
 
 async def create(db: AsyncSession, employee:Employee) -> Employee:
@@ -14,7 +15,7 @@ async def create(db: AsyncSession, employee:Employee) -> Employee:
         await db.commit()
     except IntegrityError:
         await db.rollback()
-        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=f"Email '{employee.email}' is already in use")
+        raise ConflictException(detail=f"Email '{employee.email}' is already in use")
     
     await db.refresh(employee)
     return employee
@@ -46,7 +47,7 @@ async def patch_employee(db: AsyncSession, original_employee: Employee, new_empl
         await db.commit()
     except IntegrityError:
         await db.rollback()
-        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Integrity Error")
+        raise ConflictException(detail=f"Integrity error")
     
     await db.refresh(original_employee)
 
@@ -61,7 +62,7 @@ async def delete_employee(db: AsyncSession, employee: Employee) -> Employee:
         await db.commit()
     except IntegrityError:
         await db.rollback()
-        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Integrity Error")
+        raise ConflictException(detail=f"Integrity error")
     
     await db.refresh(employee)
     return employee
