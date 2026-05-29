@@ -62,8 +62,10 @@ async def delete_employee(db: AsyncSession, employee: Employee) -> Employee:
 
 async def get_by_email(db: AsyncSession, email: str) -> Employee:
     stmt = select(Employee).where(
-        Employee.name == email,
+        Employee.email == email,
         Employee.deleted_at.is_(None)
     )
 
-    return await db.scalars(stmt).first()
+    res = await db.scalars(stmt)
+
+    return res.first()

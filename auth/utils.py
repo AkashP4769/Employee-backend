@@ -17,7 +17,6 @@ def create_access_token(data: dict) -> str:
     return jwt.encode(to_encode, setting.jwt_secret, algorithm=setting.jwt_algorithm)
 
 def decode_access_token(token: str) -> dict | None:
-    try:
-        return jwt.decode(token, setting.jwt_secret, algorithms=[setting.jwt_algorithm])
-    except JWTError:
-        return None
+    print(setting.jwt_algorithm)
+
+    return jwt.decode(token, setting.jwt_secret, algorithms=setting.jwt_algorithm)
