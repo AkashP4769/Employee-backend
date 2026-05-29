@@ -25,6 +25,8 @@ class Employee(Entity):
     email: Mapped[str] = mapped_column(String(255), nullable=False, unique=True)
     age: Mapped[int] = mapped_column(Integer, nullable=True)
 
+    password_hash: Mapped[int] = mapped_column(String(255), nullable=False)
+
     addresses: Mapped[list["Address"]] = relationship(
         "Address",
         back_populates="employee",
