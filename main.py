@@ -1,10 +1,12 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
+from fastapi.responses import JSONResponse
 import uvicorn
 import logging
 
 from middleware import configure_middleware
 from employees.router import router as employee_router
 from config import setting
+from exceptions.handler import register_exception_handlers
 
 
 logging.basicConfig(
@@ -21,6 +23,7 @@ app = FastAPI(
 )
 
 configure_middleware(app)
+register_exception_handlers(app)
 app.include_router(employee_router)
 
 @app.get("/health", tags=["health"])
