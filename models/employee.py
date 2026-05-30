@@ -8,7 +8,7 @@ from typing import Any, Optional
 from sqlalchemy import DateTime, ForeignKey, Integer, String, func
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from models import Entity
+from models import Entity, employee_departments
 
 
 def _datetime_to_iso(value: datetime | None) -> str | None:
@@ -31,6 +31,11 @@ class Employee(Entity):
         "Address",
         back_populates="employee",
         cascade="all, delete-orphan"
+    )
+
+    departments: Mapped[list["Department"]] = relationship(
+        secondary=employee_departments,
+        back_populates="employees"
     )
 
     def to_api_dict(self) -> dict[str, Any]:

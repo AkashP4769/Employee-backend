@@ -19,6 +19,8 @@ from database import Base
 
 import models.employee  # noqa: F401
 import models.address
+import models.department
+import models.employee_departments
 
 config = context.config
 

@@ -1,17 +1,15 @@
-# return {
-#             "id": self.id,
-#             "name": self.name,
-#             "created_at": datetime_to_iso(self.created_at),
-#             "updated_at": datetime_to_iso(self.updated_at),
-#             "deleted_at": datetime_to_iso(self.deleted_at),
-#         }
-
 from sqlalchemy import String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from models import Entity
+from models import Entity, employee_departments
 
 class Department(Entity):
+    __tablename__ = "departments"
     name: Mapped[str] = mapped_column(String(50), nullable=False)
 
-    employees: Mapped["employees"] = relationship("Employee", back_populates="employees")
+    employees: Mapped[list["Employee"]] = relationship(
+        secondary=employee_departments,
+        back_populates="departments"
+    )
+
+
