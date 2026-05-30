@@ -3,8 +3,10 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 from datetime import datetime
 
+from models import employee_departments
+from models import employee
 from models.employee import Employee
-from exceptions import ConflictException, DBException
+from exceptions import ConflictException, DBException, NotFoundException
 
 
 async def create(db: AsyncSession, employee:Employee) -> Employee:
@@ -69,3 +71,30 @@ async def get_by_email(db: AsyncSession, email: str) -> Employee:
     res = await db.scalars(stmt)
 
     return res.first()
+
+async def attach_department(db: AsyncSession, employee_id: int, department_id: int) -> None:
+    try:
+        await db.execute(
+            employee_departments.insert().values(
+                employee_id=employee_id,
+                department_id=department_id,
+            )
+        )
+        await db.commit()  
+
+    except IntegrityError as e:
+        await db.rollback()
+        raise ConflictException(detail=f"Employee is already attached to department")
+    
+
+async def detach_department(db: AsyncSession, employee_id: int, department_id: int) -> None:
+    try:
+        await db.execute(
+            employee_departments.delete().where(
+                employee_departments.c.employee_id == employee_id,
+                employee_departments.c.department_id == department_id
+            )
+        )
+    except IntegrityError as e:
+        await db.rollback()
+        raise NotFoundException(detail="Employee id or department id not found")

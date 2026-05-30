@@ -5,7 +5,8 @@ from auth.dependencies import get_current_user
 from auth.schemas import TokenPayload
 from database.connection import get_db
 from models import Employee
-from employees.schemas import EmployeeCreate, EmployeePatch, EmployeeResponse, GetEmployeeResponse
+from employees.schemas import EmployeeCreate, EmployeePatch, EmployeeResponse, GetEmployeeResponse 
+from employees.schemas import EmployeeDepartmentResponse
 import employees.service as service
 
 
@@ -15,6 +16,7 @@ router = APIRouter(prefix="/employee", tags=["Employees"])
 async def create_employee(body: EmployeeCreate, db: AsyncSession = Depends(get_db), ):
     db_employee = await service.create(db, body=body)
     return db_employee
+
 
 @router.get("", response_model=list[EmployeeResponse])
 async def get_all_employees(db: AsyncSession = Depends(get_db), _current_user: TokenPayload = Depends(get_current_user)) -> list[Employee]:
@@ -44,3 +46,16 @@ async def delete_employee(user_id: int, db: AsyncSession = Depends(get_db),):
     deleted_employee: Employee = await service.delete_employee(db, user_id=user_id)
 
     return deleted_employee
+
+
+@router.post('/{employee_id}/departments/{department_id}', response_model=EmployeeDepartmentResponse)
+async def attach_employee_to_department(employee_id: int, department_id: int, db: AsyncSession = Depends(get_db)):
+    attached_employee = await service.attach_department(db, employee_id, department_id)
+
+    return attached_employee
+
+@router.delete('/{employee_id}/departments/{department_id}', response_model=EmployeeDepartmentResponse)
+async def detach_employee_to_department(employee_id: int, department_id: int, db: AsyncSession = Depends(get_db)):
+    detached_employee = await service.detach_department(db, employee_id, department_id)
+
+    return detached_employee

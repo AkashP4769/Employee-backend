@@ -2,13 +2,14 @@ from typing import Any
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from employees.schemas import EmployeeCreate, EmployeePatch
+from employees.schemas import EmployeeCreate, EmployeeDepartmentResponse, EmployeePatch
 from exceptions import *
 from models.address import Address
 from models.employee import Employee
+from models.department import Department
 import employees.repository as repository
-from auth.utils import hash_password, verify_password, create_access_token
-
+from auth.utils import hash_password
+from department import service as department_service
 
 async def create(db: AsyncSession, body: EmployeeCreate) -> Employee:
     employee: Employee = Employee()
@@ -60,6 +61,8 @@ async def patch_employee(db: AsyncSession, id: int, body: EmployeePatch) -> Empl
 
 
 async def delete_employee(db: AsyncSession, user_id: int) -> Employee:
+    # TODO: Remove repo calls in service layer
+
     employee: Employee = await repository.get_employee(db, user_id=user_id)
 
     if employee is None or employee.deleted_at is not None:
@@ -68,4 +71,29 @@ async def delete_employee(db: AsyncSession, user_id: int) -> Employee:
     deleted_employee: Employee = await repository.delete_employee(db, employee=employee)
 
     return deleted_employee
+
+
+async def attach_department(db: AsyncSession, employee_id: int, department_id: int) -> dict:
+    employee = await repository.get_employee(db, user_id=employee_id)
+    department = await department_service.get_by_id(db, dept_id=department_id)
+
+    if not employee:
+        raise NotFoundException(detail="Employee not found")
+    if not department:
+        raise NotFoundException(detail="Department not found")
+
+    await repository.attach_department(db, employee_id=employee_id, department_id=department_id)
+
+    return {
+        "employee_id": employee_id,
+        "department_id": department_id
+    }
+    
+async def detach_department(db: AsyncSession, employee_id: int, department_id: int) -> dict:
+    await repository.detach_department(db, employee_id=employee_id, department_id=department_id)
+
+    return {
+        "employee_id": employee_id,
+        "department_id": department_id
+    }
     

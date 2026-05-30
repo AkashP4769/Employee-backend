@@ -59,3 +59,7 @@ class GetEmployeeResponse(EmployeeResponse):
     created_at: datetime
     updated_at: datetime
 
+
+class EmployeeDepartmentResponse(BaseModel):
+    employee_id: int
+    department_id: int
