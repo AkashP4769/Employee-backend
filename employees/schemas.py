@@ -63,3 +63,9 @@ class GetEmployeeResponse(EmployeeResponse):
 class EmployeeDepartmentResponse(BaseModel):
     employee_id: int
     department_id: int
+
+class AddressResponse(BaseModel):
+    line1: str
+    city: str
+    postal_code: str
+    country: str

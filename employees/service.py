@@ -97,3 +97,15 @@ async def detach_department(db: AsyncSession, employee_id: int, department_id: i
         "department_id": department_id
     }
     
+async def delete_address(db: AsyncSession, employee_id: int, address_id: int) -> Address:
+    address: Address = await repository.get_address_by_id(db, address_id)
+
+    if not address:
+        raise NotFoundException("Address not found")
+    
+    if address.employee_id != employee_id:
+        raise ConflictException("Address doesn't belong to employee")
+    
+    deleted_address =  await repository.delete_address(db, address=address)
+
+    return deleted_address

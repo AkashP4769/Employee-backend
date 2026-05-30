@@ -5,7 +5,7 @@ from auth.dependencies import get_current_user
 from auth.schemas import TokenPayload
 from database.connection import get_db
 from models import Employee
-from employees.schemas import EmployeeCreate, EmployeePatch, EmployeeResponse, GetEmployeeResponse 
+from employees.schemas import AddressResponse, EmployeeCreate, EmployeePatch, EmployeeResponse, GetEmployeeResponse 
 from employees.schemas import EmployeeDepartmentResponse
 import employees.service as service
 
@@ -59,3 +59,9 @@ async def detach_employee_to_department(employee_id: int, department_id: int, db
     detached_employee = await service.detach_department(db, employee_id, department_id)
 
     return detached_employee
+
+@router.delete('/{employee_id}/addresses/{address_id}', response_model=AddressResponse)
+async def delete_employee_address(employee_id: int, addess_id: int, db: AsyncSession = Depends(get_db)):
+    deleted_address = await service.delete_address(db, employee_id, addess_id)
+
+    return deleted_address

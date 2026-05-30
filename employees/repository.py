@@ -5,6 +5,7 @@ from datetime import datetime
 
 from models import employee_departments
 from models import employee
+from models.address import Address
 from models.employee import Employee
 from exceptions import ConflictException, DBException, NotFoundException
 
@@ -98,3 +99,26 @@ async def detach_department(db: AsyncSession, employee_id: int, department_id: i
     except IntegrityError as e:
         await db.rollback()
         raise NotFoundException(detail="Employee id or department id not found")
+    
+
+async def delete_address(db: AsyncSession, address: Address) -> Address:
+    address.deleted_at = datetime.now()
+
+    try:
+        await db.commit()
+    except IntegrityError as e:
+        await db.rollback()
+        raise DBException(detail=f"Error while deleting address: {str(e)}")
+    
+    await db.refresh(address)
+    return address
+
+async def get_address_by_id(db: AsyncSession, address_id: int) -> Address:
+    stmt = select(Address).where(
+        Address.id == address_id,
+        Address.deleted_at.is_(None)
+    )
+
+    res = await db.scalars(stmt)
+
+    return res.first()
