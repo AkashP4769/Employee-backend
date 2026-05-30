@@ -15,9 +15,3 @@ async def login(body: LoginRequest, db: AsyncSession = Depends(get_db)):
     token = await auth_service.login(db, body.email, body.password)
 
     return TokenResponse(access_token=token)
-
-@router.post("/verify", response_model=None)
-async def verify(body: dict):
-    res = decode_access_token(body.get('token'))
-
-    return {'res': res}

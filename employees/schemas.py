@@ -10,7 +10,7 @@ class AddressCreate(BaseModel):
 
     @field_validator('postal_code')
     @classmethod
-    def validate_psotal_code(cls, value: int) -> int:
+    def validate_psotal_code(cls, value: str) -> str:
         if not value.isdigit():
             raise ValueError("postal_code value should be a digit (0-9)")
         
@@ -29,13 +29,15 @@ class AddressCreate(BaseModel):
         
         if len(self.postal_code) != pincode:
             raise ValueError(f"Invalid postal code length for country {self.country} it should be {pincode}")
+        
+        return self
 
 class EmployeeCreate(BaseModel):
     name: str = Field(min_length=3, max_length=100)
     email: EmailStr
     password: str = Field(min_length=6, )
     age: int = Field(ge=18, le=69)
-    address: AddressCreate | None
+    address: AddressCreate
 
 class EmployeePatch(BaseModel):
     name: str = Field(min_length=3, max_length=100, default=None)

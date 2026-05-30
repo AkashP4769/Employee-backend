@@ -4,6 +4,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from employees.schemas import EmployeeCreate, EmployeePatch
 from exceptions import *
+from models.address import Address
 from models.employee import Employee
 import employees.repository as repository
 from auth.utils import hash_password, verify_password, create_access_token
@@ -17,10 +18,9 @@ async def create(db: AsyncSession, body: EmployeeCreate) -> Employee:
     employee.password_hash = hash_password(body.password)
     employee.age = body.age
 
-    if not isinstance(employee.name, str) or not employee.name:
-        raise BadRequestException(detail="email must be a non-empty string")
-    if not isinstance(employee.email, str) or not employee.email:
-        raise BadRequestException(detail="email must be a non-empty string")
+    if body.address is not None:
+        address = Address(**body.address.model_dump())
+        employee.addresses.append(address)
     
     employee = await repository.create(db, employee=employee)
 

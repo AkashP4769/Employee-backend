@@ -11,7 +11,7 @@ def get_current_user(token: str = Depends(oauth2_scheme)) -> TokenPayload:
     payload = decode_access_token(token)
 
     if payload is None:
-        raise UnauthorizedException
+        raise UnauthorizedException(detail="User not authorized")
     
     return TokenPayload(**payload)
 
