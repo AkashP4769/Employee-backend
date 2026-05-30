@@ -34,20 +34,20 @@ async def get_all_emp(db: AsyncSession) -> list[Employee]:
     return db_employees
 
 
-async def get_employee(db: AsyncSession, user_id: int) -> Employee:
-    employee: Employee = await repository.get_employee(db, user_id=user_id)
+async def get_employee(db: AsyncSession, employee_id: int) -> Employee:
+    employee: Employee = await repository.get_employee(db, employee_id=employee_id)
 
     if employee is None:
-        raise NotFoundException(detail="User not found")
+        raise NotFoundException(detail="Employee not found")
     
     return employee
 
 
 async def patch_employee(db: AsyncSession, id: int, body: EmployeePatch) -> Employee:
-    original_employee: Employee = await repository.get_employee(db, user_id=id)
+    original_employee: Employee = await repository.get_employee(db, employee_id=id)
 
     if original_employee is None:
-        raise NotFoundException(detail="User not found")
+        raise NotFoundException(detail="Employee not found")
     
     if body.name is not None:
         original_employee.name = body.name
@@ -60,13 +60,13 @@ async def patch_employee(db: AsyncSession, id: int, body: EmployeePatch) -> Empl
     return patched_employee
 
 
-async def delete_employee(db: AsyncSession, user_id: int) -> Employee:
+async def delete_employee(db: AsyncSession, employee_id: int) -> Employee:
     # TODO: Remove repo calls in service layer
 
-    employee: Employee = await repository.get_employee(db, user_id=user_id)
+    employee: Employee = await repository.get_employee(db, employee_id=employee_id)
 
     if employee is None or employee.deleted_at is not None:
-        raise NotFoundException(detail="User not found")
+        raise NotFoundException(detail="Employee not found")
     
     deleted_employee: Employee = await repository.delete_employee(db, employee=employee)
 
@@ -74,7 +74,7 @@ async def delete_employee(db: AsyncSession, user_id: int) -> Employee:
 
 
 async def attach_department(db: AsyncSession, employee_id: int, department_id: int) -> dict:
-    employee = await repository.get_employee(db, user_id=employee_id)
+    employee = await repository.get_employee(db, employee_id=employee_id)
     department = await department_service.get_by_id(db, dept_id=department_id)
 
     if not employee:

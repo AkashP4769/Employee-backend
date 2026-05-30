@@ -30,8 +30,8 @@ async def get_all(db: AsyncSession) -> list[Employee]:
     return result.all()
 
 
-async def get_employee(db: AsyncSession, user_id: int) -> Employee:
-    stmt = select(Employee).where(Employee.id == user_id)
+async def get_employee(db: AsyncSession, employee_id: int) -> Employee:
+    stmt = select(Employee).where(Employee.id == employee_id)
     result = await db.scalars(stmt)
 
     return result.first()
