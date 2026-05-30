@@ -34,7 +34,7 @@ class Employee(Entity):
     )
 
     departments: Mapped[list["Department"]] = relationship(
-        secondary=employee_departments,
+        secondary="employee_departments",
         back_populates="employees"
     )
 
