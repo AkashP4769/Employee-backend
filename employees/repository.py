@@ -4,7 +4,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from datetime import datetime
 
 from models.employee import Employee
-from exceptions import ConflictException, AppException
+from exceptions import ConflictException, DBException
 
 
 async def create(db: AsyncSession, employee:Employee) -> Employee:
@@ -39,7 +39,7 @@ async def patch_employee(db: AsyncSession, original_employee: Employee) -> Emplo
         await db.commit()
     except IntegrityError as e:
         await db.rollback()
-        raise AppException(detail=f"Something went wrong: {str(e)}")
+        raise DBException(detail=f"Something went wrong: {str(e)}")
     
     await db.refresh(original_employee)
 
@@ -54,7 +54,7 @@ async def delete_employee(db: AsyncSession, employee: Employee) -> Employee:
         await db.commit()
     except IntegrityError as e:
         await db.rollback()
-        raise AppException(detail=f"Something went wrong: {str(e)}")
+        raise DBException(detail=f"Something went wrong: {str(e)}")
     
     await db.refresh(employee)
     return employee

@@ -4,7 +4,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from datetime import datetime
 
 from models import Department
-from exceptions import ConflictException, AppException
+from exceptions import DBException
 
 async def create(db: AsyncSession, department:Department) -> Department:
     db.add(department)
@@ -13,7 +13,7 @@ async def create(db: AsyncSession, department:Department) -> Department:
         await db.commit()
     except IntegrityError:
         await db.rollback()
-        raise AppException(detail="Error during dept creation in db")
+        raise DBException(detail="Error during dept creation in db")
     
     await db.refresh(department)
     return department
@@ -38,7 +38,7 @@ async def patch(db: AsyncSession, department: Department) -> Department:
         await db.commit()
     except IntegrityError as e:
         await db.rollback()
-        raise AppException(detail=f"Error during dept updating database: {str(e)}")
+        raise DBException(detail=f"Error during dept updating database: {str(e)}")
     
     await db.refresh(department)
 
@@ -53,7 +53,7 @@ async def delete(db: AsyncSession, department: Department) -> Department:
         await db.commit()
     except IntegrityError as e:
         await db.rollback()
-        raise AppException(detail=f"Error during dept deletion in db: {str(e)}")
+        raise DBException(detail=f"Error during dept deletion in db: {str(e)}")
     
     await db.refresh(department)
     return department
