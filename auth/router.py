@@ -3,7 +3,8 @@ from sqlalchemy.orm import Session
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from auth import service as auth_service
-from auth import LoginRequest, TokenResponse, decode_access_token
+from auth import LoginRequest, TokenResponse
+from auth.schemas import RefreshTokenRequest
 from database import get_db
 
 
@@ -12,6 +13,12 @@ router = APIRouter(prefix="/auth", tags=["Auth"])
 
 @router.post("/login", response_model=TokenResponse)
 async def login(body: LoginRequest, db: AsyncSession = Depends(get_db)):
-    token = await auth_service.login(db, body.email, body.password)
+    access_token, refresh_token = await auth_service.login(db, body.email, body.password)
 
-    return TokenResponse(access_token=token)
+    return TokenResponse(access_token=access_token, refresh_token=refresh_token)
+
+@router.post("/refresh", response_model=TokenResponse)
+async def refresh_token(body: RefreshTokenRequest):
+    token = await auth_service.refresh(body.refresh_token)
+
+    return TokenResponse(access_token=token, refresh_token=body.refresh_token)
