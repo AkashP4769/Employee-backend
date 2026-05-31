@@ -2,7 +2,7 @@ from typing import Any
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from employees.schemas import EmployeeCreate, EmployeeDepartmentResponse, EmployeePatch
+from employees.schemas import AddressResponse, EmployeeCreate, EmployeeDepartmentResponse, EmployeePatch
 from exceptions import *
 from models.address import Address
 from models.employee import Employee
@@ -115,3 +115,26 @@ async def delete_address(db: AsyncSession, employee_id: int, address_id: int) ->
     deleted_address =  await repository.delete_address(db, address=address)
 
     return deleted_address
+
+async def add_address(db: AsyncSession, employee_id: int, body: AddressResponse) -> Address:
+    employee = await repository.get_employee(db, employee_id=employee_id)
+
+    if not employee:
+        raise NotFoundException("Employee not found")
+    
+    address = Address(**body.model_dump())
+    address.employee_id = employee_id
+
+    added_address = await repository.add_address(db, employee_id=employee_id, address=address)
+
+    return added_address
+
+async def get_addresses(db: AsyncSession, employee_id: int) -> list[Address]:
+    employee = await repository.get_employee(db, employee_id=employee_id)
+
+    if not employee:
+        raise NotFoundException("Employee not found")
+    
+    addresses = await repository.get_addresses_by_employee_id(db, employee_id=employee_id)
+
+    return addresses

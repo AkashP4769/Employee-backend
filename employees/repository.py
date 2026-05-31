@@ -42,7 +42,7 @@ async def patch_employee(db: AsyncSession, original_employee: Employee) -> Emplo
         await db.commit()
     except IntegrityError as e:
         await db.rollback()
-        raise DBException(detail=f"Something went wrong: {str(e)}")
+        raise DBException(detail=f"Error during patching of employee in db")
     
     await db.refresh(original_employee)
 
@@ -57,7 +57,7 @@ async def delete_employee(db: AsyncSession, employee: Employee) -> Employee:
         await db.commit()
     except IntegrityError as e:
         await db.rollback()
-        raise DBException(detail=f"Something went wrong: {str(e)}")
+        raise DBException(detail=f"Error during deletion of employee in db")
     
     await db.refresh(employee)
     return employee
@@ -122,3 +122,25 @@ async def get_address_by_id(db: AsyncSession, address_id: int) -> Address:
     res = await db.scalars(stmt)
 
     return res.first()
+
+async def add_address(db: AsyncSession, employee_id: int, address: Address) -> Address:
+    db.add(address)
+
+    try:
+        await db.commit()
+    except IntegrityError as e:
+        await db.rollback()
+        raise DBException(detail=f"Error while adding address: {str(e)}")
+    
+    await db.refresh(address)
+    return address
+
+async def get_addresses_by_employee_id(db: AsyncSession, employee_id: int) -> list[Address]:
+    stmt = select(Address).where(
+        Address.employee_id == employee_id,
+        Address.deleted_at.is_(None)
+    )
+
+    res = await db.scalars(stmt)
+
+    return res.all()

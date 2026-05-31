@@ -60,8 +60,20 @@ async def detach_employee_to_department(employee_id: int, department_id: int, db
 
     return detached_employee
 
+@router.post('/{employee_id}/addresses', response_model=AddressResponse)
+async def add_employee_address(employee_id: int, body: AddressResponse, db: AsyncSession = Depends(get_db), _current_user: TokenPayload = Depends(get_current_user)):
+    added_address = await service.add_address(db, employee_id, body)
+
+    return added_address
+
 @router.delete('/{employee_id}/addresses/{address_id}', response_model=AddressResponse)
 async def delete_employee_address(employee_id: int, addess_id: int, db: AsyncSession = Depends(get_db), _current_user: TokenPayload = Depends(get_current_user)):
     deleted_address = await service.delete_address(db, employee_id, addess_id)
 
     return deleted_address
+
+@router.get('/{employee_id}/addresses', response_model=list[AddressResponse])
+async def get_employee_addresses(employee_id: int, db: AsyncSession = Depends(get_db), _current_user: TokenPayload = Depends(get_current_user)  ):
+    addresses = await service.get_addresses(db, employee_id)
+
+    return addresses
