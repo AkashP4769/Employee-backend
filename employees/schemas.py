@@ -40,12 +40,10 @@ class EmployeeCreate(BaseModel):
     address: AddressCreate
 
 class EmployeePatch(BaseModel):
-    name: str = Field(min_length=3, max_length=100, default=None)
-    email: EmailStr | None
-    password: str = Field(min_length=6, default=None)
-    age: int = Field(ge=18, le=69, default=None) 
-    address: AddressCreate | None
-    
+    name: str | None = Field(min_length=3, max_length=100, default=None)
+    email: EmailStr | None = None
+    password: str | None = Field(min_length=6, default=None)
+    age: int | None = Field(ge=18, le=69, default=None)
 
 class EmployeeResponse(BaseModel):
     id: int

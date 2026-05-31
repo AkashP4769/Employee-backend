@@ -54,7 +54,13 @@ async def patch_employee(db: AsyncSession, id: int, body: EmployeePatch) -> Empl
 
     if body.email is not None:
         original_employee.email = body.email
-    
+
+    if body.password is not None:
+        original_employee.password_hash = hash_password(body.password)
+
+    if body.age is not None:
+        original_employee.age = body.age
+
     patched_employee: Employee = await repository.patch_employee(db, original_employee)
 
     return patched_employee
