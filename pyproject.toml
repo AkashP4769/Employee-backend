@@ -16,10 +16,28 @@ dependencies = [
     "pydantic[email]>=2.13.4",
     "bcrypt>=5.0.0",
     "python-jose[cryptography]>=3.5.0",
+    "greenlet>=3.5.1",
 ]
 
 [dependency-groups]
 dev = [
+    "aiosqlite>=0.22.1",
+    "httpx>=0.28.1",
     "poethepoet>=0.46.0",
-    
+    "pytest>=9.0.3",
+    "pytest-asyncio>=1.4.0",
+    "pytest-cov>=7.1.0",
 ]
+
+[tool.poe.tasks]
+test = "pytest"
+"test:cov" = "pytest --cov=. --cov-report=term-missing"
+
+[tool.pytest.ini_options]
+testpaths      = ["tests"]
+           # only walk tests/, not the whole repo
+python_files   = ["test_*.py"]
+        # files pytest treats as test files
+python_classes = ["Test*"]
+            # class names that group tests
+python_functions = ["test_*"]

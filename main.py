@@ -9,6 +9,7 @@ from auth.router import router as auth_router
 from department.router import router as department_router
 from config import setting
 from exceptions.handler import register_exception_handlers
+from fastapi import status
 
 
 logging.basicConfig(
@@ -30,9 +31,9 @@ app.include_router(employee_router)
 app.include_router(auth_router)
 app.include_router(department_router)
 
-@app.get("/health", tags=["health"])
+@app.get("/health", tags=["health"], status_code=200)
 def health():
-    return {"message": f"App is healthy. Environment: {setting.app_env}"}
+    return {"message": f"App is healthy. Environment: {setting.app_env}", "status": "healthy"}
 
 if __name__ == "__main__":
     uvicorn.run(app, host="localhost", port=8000, reload=True)
