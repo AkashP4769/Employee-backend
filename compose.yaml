@@ -18,5 +18,22 @@ services:
       timeout: 5s
       retries: 5
 
+  server:
+    build:
+      context: .
+      dockerfile: Dockerfile
+
+    container_name: employee_server_container
+    ports:
+      - "8000:8000"
+    depends_on:
+      - postgres
+    env_file:
+      - .env
+    environment:
+      - DATABASE_URL=postgresql+asyncpg://postgres:postgres@postgres:5432/employee_db
+    
 volumes:
   postgres_data:
+
+
