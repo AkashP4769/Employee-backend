@@ -64,6 +64,6 @@ class Employee(Entity):
             "updated_at": _datetime_to_iso(self.updated_at),
             "deleted_at": _datetime_to_iso(self.deleted_at),
         }
-    
+
     def __repr__(self):
         return f"Employee(id: {self.id}, name: {self.name}, email: {self.email}, age: {self.age})"
