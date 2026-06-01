@@ -6,7 +6,8 @@ from datetime import datetime
 from models import Department
 from exceptions import DBException
 
-async def create(db: AsyncSession, department:Department) -> Department:
+
+async def create(db: AsyncSession, department: Department) -> Department:
     db.add(department)
 
     try:
@@ -14,7 +15,7 @@ async def create(db: AsyncSession, department:Department) -> Department:
     except IntegrityError:
         await db.rollback()
         raise DBException(detail="Error during dept creation in db")
-    
+
     await db.refresh(department)
     return department
 
@@ -39,7 +40,7 @@ async def patch(db: AsyncSession, department: Department) -> Department:
     except IntegrityError as e:
         await db.rollback()
         raise DBException(detail=f"Error during dept updating database: {str(e)}")
-    
+
     await db.refresh(department)
 
     return department
@@ -54,6 +55,6 @@ async def delete(db: AsyncSession, department: Department) -> Department:
     except IntegrityError as e:
         await db.rollback()
         raise DBException(detail=f"Error during dept deletion in db: {str(e)}")
-    
+
     await db.refresh(department)
     return department

@@ -4,13 +4,12 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from datetime import datetime
 
 from models import employee_departments
-from models import employee
 from models.address import Address
 from models.employee import Employee
 from exceptions import ConflictException, DBException, NotFoundException
 
 
-async def create(db: AsyncSession, employee:Employee) -> Employee:
+async def create(db: AsyncSession, employee: Employee) -> Employee:
     db.add(employee)
 
     try:
@@ -18,7 +17,7 @@ async def create(db: AsyncSession, employee:Employee) -> Employee:
     except IntegrityError:
         await db.rollback()
         raise ConflictException(detail=f"Email '{employee.email}' is already in use")
-    
+
     await db.refresh(employee)
     return employee
 
@@ -40,10 +39,10 @@ async def get_employee(db: AsyncSession, employee_id: int) -> Employee:
 async def patch_employee(db: AsyncSession, original_employee: Employee) -> Employee:
     try:
         await db.commit()
-    except IntegrityError as e:
+    except IntegrityError:
         await db.rollback()
-        raise DBException(detail=f"Error during patching of employee in db")
-    
+        raise DBException(detail="Error during patching of employee in db")
+
     await db.refresh(original_employee)
 
     return original_employee
@@ -55,25 +54,27 @@ async def delete_employee(db: AsyncSession, employee: Employee) -> Employee:
     db.add(employee)
     try:
         await db.commit()
-    except IntegrityError as e:
+    except IntegrityError:
         await db.rollback()
-        raise DBException(detail=f"Error during deletion of employee in db")
-    
+        raise DBException(detail="Error during deletion of employee in db")
+
     await db.refresh(employee)
     return employee
 
 
 async def get_by_email(db: AsyncSession, email: str) -> Employee:
     stmt = select(Employee).where(
-        Employee.email == email,
-        Employee.deleted_at.is_(None)
+        Employee.email == email, Employee.deleted_at.is_(None)
     )
 
     res = await db.scalars(stmt)
 
     return res.first()
 
-async def attach_department(db: AsyncSession, employee_id: int, department_id: int) -> None:
+
+async def attach_department(
+    db: AsyncSession, employee_id: int, department_id: int
+) -> None:
     try:
         await db.execute(
             employee_departments.insert().values(
@@ -81,25 +82,27 @@ async def attach_department(db: AsyncSession, employee_id: int, department_id: i
                 department_id=department_id,
             )
         )
-        await db.commit()  
+        await db.commit()
 
-    except IntegrityError as e:
+    except IntegrityError:
         await db.rollback()
-        raise ConflictException(detail=f"Employee is already attached to department")
-    
+        raise ConflictException(detail="Employee is already attached to department")
 
-async def detach_department(db: AsyncSession, employee_id: int, department_id: int) -> None:
+
+async def detach_department(
+    db: AsyncSession, employee_id: int, department_id: int
+) -> None:
     try:
         await db.execute(
             employee_departments.delete().where(
                 employee_departments.c.employee_id == employee_id,
-                employee_departments.c.department_id == department_id
+                employee_departments.c.department_id == department_id,
             )
         )
-    except IntegrityError as e:
+    except IntegrityError:
         await db.rollback()
         raise NotFoundException(detail="Employee id or department id not found")
-    
+
 
 async def delete_address(db: AsyncSession, address: Address) -> Address:
     address.deleted_at = datetime.now()
@@ -109,19 +112,18 @@ async def delete_address(db: AsyncSession, address: Address) -> Address:
     except IntegrityError as e:
         await db.rollback()
         raise DBException(detail=f"Error while deleting address: {str(e)}")
-    
+
     await db.refresh(address)
     return address
 
+
 async def get_address_by_id(db: AsyncSession, address_id: int) -> Address:
-    stmt = select(Address).where(
-        Address.id == address_id,
-        Address.deleted_at.is_(None)
-    )
+    stmt = select(Address).where(Address.id == address_id, Address.deleted_at.is_(None))
 
     res = await db.scalars(stmt)
 
     return res.first()
+
 
 async def add_address(db: AsyncSession, employee_id: int, address: Address) -> Address:
     db.add(address)
@@ -131,14 +133,16 @@ async def add_address(db: AsyncSession, employee_id: int, address: Address) -> A
     except IntegrityError as e:
         await db.rollback()
         raise DBException(detail=f"Error while adding address: {str(e)}")
-    
+
     await db.refresh(address)
     return address
 
-async def get_addresses_by_employee_id(db: AsyncSession, employee_id: int) -> list[Address]:
+
+async def get_addresses_by_employee_id(
+    db: AsyncSession, employee_id: int
+) -> list[Address]:
     stmt = select(Address).where(
-        Address.employee_id == employee_id,
-        Address.deleted_at.is_(None)
+        Address.employee_id == employee_id, Address.deleted_at.is_(None)
     )
 
     res = await db.scalars(stmt)

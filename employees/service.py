@@ -1,15 +1,13 @@
-from typing import Any
-
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from employees.schemas import AddressResponse, EmployeeCreate, EmployeeDepartmentResponse, EmployeePatch
-from exceptions import *
+from employees.schemas import AddressResponse, EmployeeCreate, EmployeePatch
+from exceptions import NotFoundException, ConflictException
 from models.address import Address
 from models.employee import Employee
-from models.department import Department
 import employees.repository as repository
 from auth.utils import hash_password
 from department import service as department_service
+
 
 async def create(db: AsyncSession, body: EmployeeCreate) -> Employee:
     employee: Employee = Employee()
@@ -23,7 +21,7 @@ async def create(db: AsyncSession, body: EmployeeCreate) -> Employee:
     if body.address is not None:
         address = Address(**body.address.model_dump())
         employee.addresses.append(address)
-    
+
     employee = await repository.create(db, employee=employee)
 
     return employee
@@ -40,7 +38,7 @@ async def get_employee(db: AsyncSession, employee_id: int) -> Employee:
 
     if employee is None:
         raise NotFoundException(detail="Employee not found")
-    
+
     return employee
 
 
@@ -49,7 +47,7 @@ async def patch_employee(db: AsyncSession, id: int, body: EmployeePatch) -> Empl
 
     if original_employee is None:
         raise NotFoundException(detail="Employee not found")
-    
+
     if body.name is not None:
         original_employee.name = body.name
 
@@ -77,13 +75,15 @@ async def delete_employee(db: AsyncSession, employee_id: int) -> Employee:
 
     if employee is None or employee.deleted_at is not None:
         raise NotFoundException(detail="Employee not found")
-    
+
     deleted_employee: Employee = await repository.delete_employee(db, employee=employee)
 
     return deleted_employee
 
 
-async def attach_department(db: AsyncSession, employee_id: int, department_id: int) -> dict:
+async def attach_department(
+    db: AsyncSession, employee_id: int, department_id: int
+) -> dict:
     employee = await repository.get_employee(db, employee_id=employee_id)
     department = await department_service.get_by_id(db, dept_id=department_id)
 
@@ -92,53 +92,65 @@ async def attach_department(db: AsyncSession, employee_id: int, department_id: i
     if not department:
         raise NotFoundException(detail="Department not found")
 
-    await repository.attach_department(db, employee_id=employee_id, department_id=department_id)
+    await repository.attach_department(
+        db, employee_id=employee_id, department_id=department_id
+    )
 
-    return {
-        "employee_id": employee_id,
-        "department_id": department_id
-    }
-    
-async def detach_department(db: AsyncSession, employee_id: int, department_id: int) -> dict:
-    await repository.detach_department(db, employee_id=employee_id, department_id=department_id)
+    return {"employee_id": employee_id, "department_id": department_id}
 
-    return {
-        "employee_id": employee_id,
-        "department_id": department_id
-    }
-    
-async def delete_address(db: AsyncSession, employee_id: int, address_id: int) -> Address:
+
+async def detach_department(
+    db: AsyncSession, employee_id: int, department_id: int
+) -> dict:
+    await repository.detach_department(
+        db, employee_id=employee_id, department_id=department_id
+    )
+
+    return {"employee_id": employee_id, "department_id": department_id}
+
+
+async def delete_address(
+    db: AsyncSession, employee_id: int, address_id: int
+) -> Address:
     address: Address = await repository.get_address_by_id(db, address_id)
 
     if not address:
         raise NotFoundException("Address not found")
-    
+
     if address.employee_id != employee_id:
         raise ConflictException("Address doesn't belong to employee")
-    
-    deleted_address =  await repository.delete_address(db, address=address)
+
+    deleted_address = await repository.delete_address(db, address=address)
 
     return deleted_address
 
-async def add_address(db: AsyncSession, employee_id: int, body: AddressResponse) -> Address:
+
+async def add_address(
+    db: AsyncSession, employee_id: int, body: AddressResponse
+) -> Address:
     employee = await repository.get_employee(db, employee_id=employee_id)
 
     if not employee:
         raise NotFoundException("Employee not found")
-    
+
     address = Address(**body.model_dump())
     address.employee_id = employee_id
 
-    added_address = await repository.add_address(db, employee_id=employee_id, address=address)
+    added_address = await repository.add_address(
+        db, employee_id=employee_id, address=address
+    )
 
     return added_address
+
 
 async def get_addresses(db: AsyncSession, employee_id: int) -> list[Address]:
     employee = await repository.get_employee(db, employee_id=employee_id)
 
     if not employee:
         raise NotFoundException("Employee not found")
-    
-    addresses = await repository.get_addresses_by_employee_id(db, employee_id=employee_id)
+
+    addresses = await repository.get_addresses_by_employee_id(
+        db, employee_id=employee_id
+    )
 
     return addresses

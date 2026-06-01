@@ -27,7 +27,7 @@ async def test_create_employee_persists_the_record():
             email="ada@example.com",
             password="secret123",
             age=18,
-            address=None
+            address=None,
         )
 
         employee = await employee_service.create(db, body)

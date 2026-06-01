@@ -9,17 +9,22 @@ class AppException(Exception):
 class NotFoundException(AppException):
     """Requested resource does not exist."""
 
+
 class ConflictException(AppException):
     """Operation conflicts with existing state (e.g. duplicate email)."""
+
 
 class BadRequestException(AppException):
     """Client input is invalid in a way Pydantic validation didn't catch."""
 
+
 class UnauthorizedException(AppException):
     """UnauthorizedException"""
 
+
 class ForbiddenException(AppException):
     "ForbiddenException"
+
 
 class DBException(AppException):
     """Error During Database update"""

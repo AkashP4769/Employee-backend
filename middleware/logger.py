@@ -9,6 +9,7 @@ from starlette.responses import Response
 
 logger = logging.getLogger(__name__)
 
+
 class RequestLoggingMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request: Request, call_next) -> Response:
         start_time = time.time()
@@ -17,6 +18,13 @@ class RequestLoggingMiddleware(BaseHTTPMiddleware):
         duration_in_ms = round((time.time() - start_time) * 1000)
         client_ip = request.client.host if request else None
 
-        logging.info(f"%s %s %s %s %dms", client_ip, request.method, request.url.path, response.status_code, duration_in_ms)
+        logging.info(
+            "%s %s %s %s %dms",
+            client_ip,
+            request.method,
+            request.url.path,
+            response.status_code,
+            duration_in_ms,
+        )
 
         return response

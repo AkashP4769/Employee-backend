@@ -1,5 +1,4 @@
-from fastapi import FastAPI, Request
-from fastapi.responses import JSONResponse
+from fastapi import FastAPI
 import uvicorn
 import logging
 
@@ -9,13 +8,12 @@ from auth.router import router as auth_router
 from department.router import router as department_router
 from config import setting
 from exceptions.handler import register_exception_handlers
-from fastapi import status
 
 
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
-    datefmt="%Y-%m-%d %H:%M:%S"
+    datefmt="%Y-%m-%d %H:%M:%S",
 )
 
 
@@ -31,9 +29,14 @@ app.include_router(employee_router)
 app.include_router(auth_router)
 app.include_router(department_router)
 
+
 @app.get("/health", tags=["health"], status_code=200)
 def health():
-    return {"message": f"App is healthy. Environment: {setting.app_env}", "status": "healthy"}
+    return {
+        "message": f"App is healthy. Environment: {setting.app_env}",
+        "status": "healthy",
+    }
+
 
 if __name__ == "__main__":
     uvicorn.run(app, host="localhost", port=8000, reload=True)

@@ -1,9 +1,7 @@
-from typing import Any
-
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from department.schemas import DepartmentCreate, DepartmentPatch
-from exceptions import *
+from exceptions import NotFoundException
 from models import Department
 from department import repository
 
@@ -28,7 +26,7 @@ async def get_by_id(db: AsyncSession, dept_id: int) -> Department:
 
     if department is None:
         raise NotFoundException(detail="Department not found")
-    
+
     return department
 
 
@@ -37,10 +35,10 @@ async def patch(db: AsyncSession, id: int, body: DepartmentPatch) -> Department:
 
     if department is None:
         raise NotFoundException(detail="Department not found")
-    
+
     if body.name is not None:
         department.name = body.name
-    
+
     patched_department: Department = await repository.patch(db, department)
 
     return patched_department
@@ -51,8 +49,7 @@ async def delete(db: AsyncSession, dept_id: int) -> Department:
 
     if department is None or department.deleted_at is not None:
         raise NotFoundException(detail="Department not found")
-    
+
     deleted_department: Department = await repository.delete(db, department=department)
 
     return deleted_department
-    
