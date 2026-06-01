@@ -8,6 +8,6 @@ class Department(Entity):
     __tablename__ = "departments"
     name: Mapped[str] = mapped_column(String(50), nullable=False)
 
-    employees: Mapped[list["Employee"]] = relationship(
+    employees: Mapped[list["Employee"]] = relationship(  # noqa: F821
         secondary="employee_departments", back_populates="departments"
     )

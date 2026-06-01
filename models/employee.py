@@ -45,11 +45,11 @@ class Employee(Entity):
         server_default=EmployeeRole.DEVELOPER.value,
     )
 
-    addresses: Mapped[list["Address"]] = relationship(
+    addresses: Mapped[list["Address"]] = relationship(  # noqa: F821
         "Address", back_populates="employee", cascade="all, delete-orphan"
     )
 
-    departments: Mapped[list["Department"]] = relationship(
+    departments: Mapped[list["Department"]] = relationship(  # noqa: F821
         secondary="employee_departments", back_populates="employees"
     )
 
