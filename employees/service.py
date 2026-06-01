@@ -18,6 +18,7 @@ async def create(db: AsyncSession, body: EmployeeCreate) -> Employee:
     employee.email = body.email.strip()
     employee.password_hash = hash_password(body.password)
     employee.age = body.age
+    employee.role = body.role
 
     if body.address is not None:
         address = Address(**body.address.model_dump())
@@ -60,6 +61,9 @@ async def patch_employee(db: AsyncSession, id: int, body: EmployeePatch) -> Empl
 
     if body.age is not None:
         original_employee.age = body.age
+
+    if body.role is not None:
+        original_employee.role = body.role
 
     patched_employee: Employee = await repository.patch_employee(db, original_employee)
 

@@ -12,6 +12,7 @@ class LoginRequest(BaseModel):
 class TokenPayload(BaseModel):
     id: int
     email: str
+    role: str
 
 class RefreshTokenRequest(BaseModel):
     refresh_token: str

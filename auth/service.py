@@ -14,8 +14,8 @@ async def login(db: AsyncSession, email: str, password: str) -> tuple[str, str]:
     if not verify_password(password, employee.password_hash):
         raise UnauthorizedException("Invalid username or password")
     
-    access_token = create_access_token({"id": employee.id, "email": employee.email})
-    refresh_token = create_refresh_token({"id": employee.id, "email": employee.email})
+    access_token = create_access_token({"id": employee.id, "email": employee.email, "role": employee.role})
+    refresh_token = create_refresh_token({"id": employee.id, "email": employee.email, "role": employee.role})
 
     return access_token, refresh_token
 

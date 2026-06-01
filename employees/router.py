@@ -1,18 +1,17 @@
 from fastapi import Body, Depends, status, APIRouter
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from auth.dependencies import get_current_user
+from auth.dependencies import get_current_user, require_role
 from auth.schemas import TokenPayload
 from database.connection import get_db
-from models import Employee
+from models import Employee, EmployeeRole
 from employees.schemas import AddressResponse, EmployeeCreate, EmployeePatch, EmployeeResponse, GetEmployeeResponse 
 from employees.schemas import EmployeeDepartmentResponse
 import employees.service as service
 
 
 router = APIRouter(prefix="/employee", tags=["Employees"])
-
-@router.post("", status_code=status.HTTP_201_CREATED, response_model=EmployeeResponse)
+@router.post("", status_code=status.HTTP_201_CREATED, response_model=EmployeeResponse, dependencies=[Depends(require_role(EmployeeRole.HR))])
 async def create_employee(body: EmployeeCreate, db: AsyncSession = Depends(get_db), _current_user: TokenPayload = Depends(get_current_user) ):
     db_employee = await service.create(db, body=body)
     return db_employee
@@ -32,7 +31,7 @@ async def get_employee(employee_id: int, db: AsyncSession = Depends(get_db), _cu
     return employee
 
 
-@router.patch("/{employee_id}", status_code=status.HTTP_200_OK, response_model=EmployeeResponse)
+@router.patch("/{employee_id}", status_code=status.HTTP_200_OK, response_model=EmployeeResponse, dependencies=[Depends(require_role(EmployeeRole.HR))])
 async def patch_employee(employee_id: int, body: EmployeePatch, db: AsyncSession = Depends(get_db), _current_user: TokenPayload = Depends(get_current_user)):
     id = employee_id
 
@@ -41,32 +40,32 @@ async def patch_employee(employee_id: int, body: EmployeePatch, db: AsyncSession
     return patched_employee
 
 
-@router.delete("/{employee_id}", response_model=EmployeeResponse)
+@router.delete("/{employee_id}", response_model=EmployeeResponse, dependencies=[Depends(require_role(EmployeeRole.HR))])
 async def delete_employee(employee_id: int, db: AsyncSession = Depends(get_db), _current_user: TokenPayload = Depends(get_current_user)):
     deleted_employee: Employee = await service.delete_employee(db, employee_id=employee_id)
 
     return deleted_employee
 
 
-@router.post('/{employee_id}/departments/{department_id}', response_model=EmployeeDepartmentResponse)
+@router.post('/{employee_id}/departments/{department_id}', response_model=EmployeeDepartmentResponse, dependencies=[Depends(require_role(EmployeeRole.HR))])
 async def attach_employee_to_department(employee_id: int, department_id: int, db: AsyncSession = Depends(get_db), _current_user: TokenPayload = Depends(get_current_user)):
     attached_employee = await service.attach_department(db, employee_id, department_id)
 
     return attached_employee
 
-@router.delete('/{employee_id}/departments/{department_id}', response_model=EmployeeDepartmentResponse)
+@router.delete('/{employee_id}/departments/{department_id}', response_model=EmployeeDepartmentResponse, dependencies=[Depends(require_role(EmployeeRole.HR))])
 async def detach_employee_to_department(employee_id: int, department_id: int, db: AsyncSession = Depends(get_db), _current_user: TokenPayload = Depends(get_current_user)):
     detached_employee = await service.detach_department(db, employee_id, department_id)
 
     return detached_employee
 
-@router.post('/{employee_id}/addresses', response_model=AddressResponse)
+@router.post('/{employee_id}/addresses', response_model=AddressResponse, dependencies=[Depends(require_role(EmployeeRole.HR))])
 async def add_employee_address(employee_id: int, body: AddressResponse, db: AsyncSession = Depends(get_db), _current_user: TokenPayload = Depends(get_current_user)):
     added_address = await service.add_address(db, employee_id, body)
 
     return added_address
 
-@router.delete('/{employee_id}/addresses/{address_id}', response_model=AddressResponse)
+@router.delete('/{employee_id}/addresses/{address_id}', response_model=AddressResponse, dependencies=[Depends(require_role(EmployeeRole.HR))])
 async def delete_employee_address(employee_id: int, addess_id: int, db: AsyncSession = Depends(get_db), _current_user: TokenPayload = Depends(get_current_user)):
     deleted_address = await service.delete_address(db, employee_id, addess_id)
 
