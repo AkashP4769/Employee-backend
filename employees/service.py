@@ -34,7 +34,9 @@ async def get_all_emp(db: AsyncSession) -> list[Employee]:
 
 
 async def get_employee(db: AsyncSession, employee_id: int) -> Employee:
-    employee: Employee = await repository.get_employee(db, employee_id=employee_id)
+    employee: Employee = await repository.get_employee_by_id(
+        db, employee_id=employee_id
+    )
 
     if employee is None:
         raise NotFoundException(detail=f"Employee with id {employee_id} not found")
@@ -43,7 +45,7 @@ async def get_employee(db: AsyncSession, employee_id: int) -> Employee:
 
 
 async def patch_employee(db: AsyncSession, id: int, body: EmployeePatch) -> Employee:
-    employee: Employee = await repository.get_employee(db, employee_id=id)
+    employee: Employee = await repository.get_employee_by_id(db, employee_id=id)
 
     if employee is None:
         raise NotFoundException(detail=f"Employee with id {id} not found")
@@ -69,9 +71,9 @@ async def patch_employee(db: AsyncSession, id: int, body: EmployeePatch) -> Empl
 
 
 async def delete_employee(db: AsyncSession, employee_id: int) -> Employee:
-    # TODO: Remove repo calls in service layer
-
-    employee: Employee = await repository.get_employee(db, employee_id=employee_id)
+    employee: Employee = await repository.get_employee_by_id(
+        db, employee_id=employee_id
+    )
 
     if employee is None or employee.deleted_at is not None:
         raise NotFoundException(detail=f"Employee with id {employee_id} not found")
@@ -84,7 +86,7 @@ async def delete_employee(db: AsyncSession, employee_id: int) -> Employee:
 async def attach_department(
     db: AsyncSession, employee_id: int, department_id: int
 ) -> dict:
-    employee = await repository.get_employee(db, employee_id=employee_id)
+    employee = await repository.get_employee_by_id(db, employee_id=employee_id)
     department = await department_service.get_by_id(db, dept_id=department_id)
 
     if not employee or employee.deleted_at is not None:
@@ -128,7 +130,7 @@ async def delete_address(
 async def add_address(
     db: AsyncSession, employee_id: int, body: AddressResponse
 ) -> Address:
-    employee = await repository.get_employee(db, employee_id=employee_id)
+    employee = await repository.get_employee_by_id(db, employee_id=employee_id)
 
     if not employee:
         raise NotFoundException(f"Employee {employee_id} not found")
@@ -144,7 +146,7 @@ async def add_address(
 
 
 async def get_addresses(db: AsyncSession, employee_id: int) -> list[Address]:
-    employee = await repository.get_employee(db, employee_id=employee_id)
+    employee = await repository.get_employee_by_id(db, employee_id=employee_id)
 
     if not employee:
         raise NotFoundException(f"Employee with id {employee_id} not found")

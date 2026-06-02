@@ -29,7 +29,7 @@ async def get_all(db: AsyncSession) -> list[Employee]:
     return result.all()
 
 
-async def get_employee(db: AsyncSession, employee_id: int) -> Employee:
+async def get_employee_by_id(db: AsyncSession, employee_id: int) -> Employee:
     stmt = select(Employee).where(Employee.id == employee_id)
     result = await db.scalars(stmt)
 
