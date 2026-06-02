@@ -28,7 +28,9 @@ async def get_all(db: AsyncSession) -> list[Department]:
 
 
 async def get_by_id(db: AsyncSession, dept_id: int) -> Department:
-    stmt = select(Department).where(Department.id == dept_id)
+    stmt = select(Department).where(
+        Department.id == dept_id, Department.deleted_at.is_(None)
+    )
     result = await db.scalars(stmt)
 
     return result.first()
@@ -37,9 +39,11 @@ async def get_by_id(db: AsyncSession, dept_id: int) -> Department:
 async def patch(db: AsyncSession, department: Department) -> Department:
     try:
         await db.commit()
-    except IntegrityError as e:
+    except IntegrityError:
         await db.rollback()
-        raise DBException(detail=f"Error during dept updating database: {str(e)}")
+        raise DBException(
+            detail=f"Error during updation of department {department.id} in db"
+        )
 
     await db.refresh(department)
 
@@ -49,12 +53,13 @@ async def patch(db: AsyncSession, department: Department) -> Department:
 async def delete(db: AsyncSession, department: Department) -> Department:
     department.deleted_at = datetime.now()
 
-    db.add(department)
     try:
         await db.commit()
-    except IntegrityError as e:
+    except IntegrityError:
         await db.rollback()
-        raise DBException(detail=f"Error during dept deletion in db: {str(e)}")
+        raise DBException(
+            detail=f"Error during deletion of department {department.id} in db"
+        )
 
     await db.refresh(department)
     return department

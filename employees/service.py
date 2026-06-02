@@ -118,7 +118,7 @@ async def delete_address(
         raise NotFoundException(f"Address with id {address_id} not found")
 
     if address.employee_id != employee_id:
-        raise ConflictException("Address doesn't belong to employee")
+        raise ConflictException(f"Address doesn't belong to employee {employee_id}")
 
     deleted_address = await repository.delete_address(db, address=address)
 

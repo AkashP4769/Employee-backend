@@ -41,7 +41,9 @@ async def patch_employee(db: AsyncSession, original_employee: Employee) -> Emplo
         await db.commit()
     except IntegrityError:
         await db.rollback()
-        raise DBException(detail="Error during patching of employee in db")
+        raise DBException(
+            detail=f"Error during patching of employee of id {original_employee.id} in db"
+        )
 
     await db.refresh(original_employee)
 
@@ -51,12 +53,13 @@ async def patch_employee(db: AsyncSession, original_employee: Employee) -> Emplo
 async def delete_employee(db: AsyncSession, employee: Employee) -> Employee:
     employee.deleted_at = datetime.now()
 
-    db.add(employee)
     try:
         await db.commit()
     except IntegrityError:
         await db.rollback()
-        raise DBException(detail="Error during deletion of employee in db")
+        raise DBException(
+            detail=f"Error during deletion of employee of id {employee.id} in db"
+        )
 
     await db.refresh(employee)
     return employee
@@ -86,7 +89,9 @@ async def attach_department(
 
     except IntegrityError:
         await db.rollback()
-        raise ConflictException(detail="Employee is already attached to department")
+        raise ConflictException(
+            detail=f"Employee {employee_id} is already attached to department {department_id}"
+        )
 
 
 async def detach_department(
@@ -103,7 +108,9 @@ async def detach_department(
         await db.commit()
     except IntegrityError:
         await db.rollback()
-        raise NotFoundException(detail="Employee id or department id not found")
+        raise NotFoundException(
+            detail=f"Employee id {employee_id} or department id {department_id} not found"
+        )
 
 
 async def delete_address(db: AsyncSession, address: Address) -> Address:
@@ -111,9 +118,9 @@ async def delete_address(db: AsyncSession, address: Address) -> Address:
 
     try:
         await db.commit()
-    except IntegrityError as e:
+    except IntegrityError:
         await db.rollback()
-        raise DBException(detail=f"Error while deleting address: {str(e)}")
+        raise DBException(detail=f"Error while deleting address {address.id}")
 
     await db.refresh(address)
     return address
@@ -132,9 +139,11 @@ async def add_address(db: AsyncSession, employee_id: int, address: Address) -> A
 
     try:
         await db.commit()
-    except IntegrityError as e:
+    except IntegrityError:
         await db.rollback()
-        raise DBException(detail=f"Error while adding address: {str(e)}")
+        raise DBException(
+            detail=f"Error while adding address for employee {employee_id}"
+        )
 
     await db.refresh(address)
     return address
