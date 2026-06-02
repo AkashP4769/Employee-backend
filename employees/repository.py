@@ -99,6 +99,8 @@ async def detach_department(
                 employee_departments.c.department_id == department_id,
             )
         )
+
+        await db.commit()
     except IntegrityError:
         await db.rollback()
         raise NotFoundException(detail="Employee id or department id not found")
