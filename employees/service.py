@@ -37,7 +37,7 @@ async def get_employee(db: AsyncSession, employee_id: int) -> Employee:
     employee: Employee = await repository.get_employee(db, employee_id=employee_id)
 
     if employee is None:
-        raise NotFoundException(detail="Employee not found")
+        raise NotFoundException(detail=f"Employee with id {employee_id} not found")
 
     return employee
 
@@ -46,7 +46,7 @@ async def patch_employee(db: AsyncSession, id: int, body: EmployeePatch) -> Empl
     original_employee: Employee = await repository.get_employee(db, employee_id=id)
 
     if original_employee is None:
-        raise NotFoundException(detail="Employee not found")
+        raise NotFoundException(detail=f"Employee with id {id} not found")
 
     if body.name is not None:
         original_employee.name = body.name
@@ -74,7 +74,7 @@ async def delete_employee(db: AsyncSession, employee_id: int) -> Employee:
     employee: Employee = await repository.get_employee(db, employee_id=employee_id)
 
     if employee is None or employee.deleted_at is not None:
-        raise NotFoundException(detail="Employee not found")
+        raise NotFoundException(detail=f"Employee with id {employee_id} not found")
 
     deleted_employee: Employee = await repository.delete_employee(db, employee=employee)
 
@@ -87,10 +87,10 @@ async def attach_department(
     employee = await repository.get_employee(db, employee_id=employee_id)
     department = await department_service.get_by_id(db, dept_id=department_id)
 
-    if not employee:
-        raise NotFoundException(detail="Employee not found")
-    if not department:
-        raise NotFoundException(detail="Department not found")
+    if not employee or employee.deleted_at is not None:
+        raise NotFoundException(detail=f"Employee with id {employee_id} not found")
+    if not department or department.deleted_at is not None:
+        raise NotFoundException(detail=f"Department with id {department_id} not found")
 
     await repository.attach_department(
         db, employee_id=employee_id, department_id=department_id
@@ -115,7 +115,7 @@ async def delete_address(
     address: Address = await repository.get_address_by_id(db, address_id)
 
     if not address:
-        raise NotFoundException("Address not found")
+        raise NotFoundException(f"Address with id {address_id} not found")
 
     if address.employee_id != employee_id:
         raise ConflictException("Address doesn't belong to employee")
@@ -131,7 +131,7 @@ async def add_address(
     employee = await repository.get_employee(db, employee_id=employee_id)
 
     if not employee:
-        raise NotFoundException("Employee not found")
+        raise NotFoundException(f"Employee {employee_id} not found")
 
     address = Address(**body.model_dump())
     address.employee_id = employee_id
@@ -147,7 +147,7 @@ async def get_addresses(db: AsyncSession, employee_id: int) -> list[Address]:
     employee = await repository.get_employee(db, employee_id=employee_id)
 
     if not employee:
-        raise NotFoundException("Employee not found")
+        raise NotFoundException(f"Employee with id {employee_id} not found")
 
     addresses = await repository.get_addresses_by_employee_id(
         db, employee_id=employee_id
