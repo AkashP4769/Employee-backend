@@ -43,27 +43,27 @@ async def get_employee(db: AsyncSession, employee_id: int) -> Employee:
 
 
 async def patch_employee(db: AsyncSession, id: int, body: EmployeePatch) -> Employee:
-    original_employee: Employee = await repository.get_employee(db, employee_id=id)
+    employee: Employee = await repository.get_employee(db, employee_id=id)
 
-    if original_employee is None:
+    if employee is None:
         raise NotFoundException(detail=f"Employee with id {id} not found")
 
     if body.name is not None:
-        original_employee.name = body.name
+        employee.name = body.name
 
     if body.email is not None:
-        original_employee.email = body.email
+        employee.email = body.email
 
     if body.password is not None:
-        original_employee.password_hash = hash_password(body.password)
+        employee.password_hash = hash_password(body.password)
 
     if body.age is not None:
-        original_employee.age = body.age
+        employee.age = body.age
 
     if body.role is not None:
-        original_employee.role = body.role
+        employee.role = body.role
 
-    patched_employee: Employee = await repository.patch_employee(db, original_employee)
+    patched_employee: Employee = await repository.patch_employee(db, employee)
 
     return patched_employee
 

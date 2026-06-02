@@ -36,18 +36,18 @@ async def get_employee(db: AsyncSession, employee_id: int) -> Employee:
     return result.first()
 
 
-async def patch_employee(db: AsyncSession, original_employee: Employee) -> Employee:
+async def patch_employee(db: AsyncSession, employee: Employee) -> Employee:
     try:
         await db.commit()
     except IntegrityError:
         await db.rollback()
         raise DBException(
-            detail=f"Error during patching of employee of id {original_employee.id} in db"
+            detail=f"Error during patching of employee of id {employee.id} in db"
         )
 
-    await db.refresh(original_employee)
+    await db.refresh(employee)
 
-    return original_employee
+    return employee
 
 
 async def delete_employee(db: AsyncSession, employee: Employee) -> Employee:
