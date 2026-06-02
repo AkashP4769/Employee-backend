@@ -6,6 +6,7 @@ from auth.schemas import TokenPayload
 from database.connection import get_db
 from models import Employee, EmployeeRole
 from employees.schemas import (
+    AddressCreate,
     AddressResponse,
     EmployeeCreate,
     EmployeePatch,
@@ -130,7 +131,7 @@ async def detach_employee_to_department(
 )
 async def add_employee_address(
     employee_id: int,
-    body: AddressResponse,
+    body: AddressCreate,
     db: AsyncSession = Depends(get_db),
     _current_user: TokenPayload = Depends(get_current_user),
 ):

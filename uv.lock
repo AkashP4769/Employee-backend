@@ -472,6 +472,7 @@ dependencies = [
 [package.dev-dependencies]
 dev = [
     { name = "aiosqlite" },
+    { name = "greenlet" },
     { name = "httpx" },
     { name = "poethepoet" },
     { name = "pytest" },
@@ -501,6 +502,7 @@ requires-dist = [
 [package.metadata.requires-dev]
 dev = [
     { name = "aiosqlite", specifier = ">=0.22.1" },
+    { name = "greenlet", specifier = ">=3.5.1" },
     { name = "httpx", specifier = ">=0.28.1" },
     { name = "poethepoet", specifier = ">=0.46.0" },
     { name = "pytest", specifier = ">=9.0.3" },

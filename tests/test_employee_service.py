@@ -1,42 +1,40 @@
+# tests/test_employee_service.py
+
+# `pytest_asyncio` provides the *async-aware* fixture decorator. Plain
+# `@pytest.fixture` doesn't know how to drive an `async def` body — you
+# have to use `@pytest_asyncio.fixture` whenever the fixture itself is
+# async or yields an async resource.
 import pytest
-from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
-from sqlalchemy.pool import StaticPool
+# Same async-flavoured SQLAlchemy imports as the previous slide.
 
-from database import Base
+
+from auth.utils import hash_password
 from employees import service as employee_service
-from employees.schemas import EmployeeCreate
+from exceptions import NotFoundException
+from models.employee import Employee
 
 
-@pytest.mark.asyncio
-async def test_create_employee_persists_the_record():
-    engine = create_async_engine(
-        "sqlite+aiosqlite:///:memory:",
-        connect_args={"check_same_thread": False},
-        poolclass=StaticPool,
-        echo=True,
+# The test is now pure "act + assert" — no engine, no create_all, no
+# cleanup. Pytest sees the `db_session` parameter, runs the fixture
+# above, and hands the yielded session in.
+async def test_get_by_id_returns_seeded_employee(db_session):
+    seeded = Employee(
+        name="Ada", email="ada@example.com", password_hash=hash_password("secret123")
     )
+    db_session.add(seeded)
 
-    async with engine.begin() as conn:
-        await conn.run_sync(Base.metadata.create_all)
+    await db_session.commit()
 
-    session_factory = async_sessionmaker(bind=engine, class_=AsyncSession)
+    await db_session.refresh(seeded)
 
-    async with session_factory() as db:
-        body = EmployeeCreate(
-            name="Ada",
-            email="ada@example.com",
-            password="secret123",
-            age=18,
-            address=None,
-        )
+    fetched = await employee_service.get_employee(db_session, seeded.id)
 
-        employee = await employee_service.create(db, body)
+    assert fetched.id == seeded.id
+    assert fetched.email == "ada@example.com"
 
-        assert employee.id is not None
-        assert employee.name == "Ada"
-        assert employee.email == "ada@example.com"
 
-    async with engine.begin() as conn:
-        await conn.run_sync(Base.metadata.drop_all)
+async def test_get_by_id_raises_when_missing(db_session):
+    with pytest.raises(NotFoundException) as exc_info:
+        await employee_service.get_employee(db_session, 9999)
 
-    await engine.dispose()
+    assert "9999" in exc_info.value.detail
