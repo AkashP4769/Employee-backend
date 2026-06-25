@@ -14,9 +14,11 @@ async def login(db: AsyncSession, email: str, password: str) -> tuple[str, str]:
     employee: Employee = await repository.get_by_email(db, email=email)
 
     if employee is None:
+        print("/login - employee is None")
         raise UnauthorizedException("Invalid username or password")
 
     if not verify_password(password, employee.password_hash):
+        print("/login - invalid password")
         raise UnauthorizedException("Invalid username or password")
 
     access_token = create_access_token(
@@ -26,6 +28,7 @@ async def login(db: AsyncSession, email: str, password: str) -> tuple[str, str]:
         {"id": employee.id, "email": employee.email, "role": employee.role}
     )
 
+    print("/login - successful login")
     return access_token, refresh_token
 
 
