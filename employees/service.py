@@ -1,9 +1,14 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from employees.schemas import AddressResponse, EmployeeCreate, EmployeePatch
+from employees.schemas import (
+    AddressCreate,
+    AddressResponse,
+    EmployeeCreate,
+    EmployeePatch,
+)
 from exceptions import NotFoundException, ConflictException
 from models.address import Address
-from models.employee import Employee
+from models.employee import Employee, Status
 import employees.repository as repository
 from auth.utils import hash_password
 from department import service as department_service
@@ -17,6 +22,8 @@ async def create(db: AsyncSession, body: EmployeeCreate) -> Employee:
     employee.password_hash = hash_password(body.password)
     employee.age = body.age
     employee.role = body.role
+    employee.experience = body.experience
+    employee.status = body.status
 
     if body.address is not None:
         address = Address(**body.address.model_dump())
@@ -27,8 +34,8 @@ async def create(db: AsyncSession, body: EmployeeCreate) -> Employee:
     return employee
 
 
-async def get_all_emp(db: AsyncSession) -> list[Employee]:
-    db_employees = await repository.get_all(db)
+async def get_all_emp(db: AsyncSession, status: Status | None) -> list[Employee]:
+    db_employees = await repository.get_all(db, status)
 
     return db_employees
 
@@ -64,6 +71,19 @@ async def patch_employee(db: AsyncSession, id: int, body: EmployeePatch) -> Empl
 
     if body.role is not None:
         employee.role = body.role
+
+    if body.status is not None:
+        employee.status = body.status
+
+    if body.experience is not None:
+        employee.experience = body.experience
+
+    print("body.address", body.address)
+    if body.address is not None:
+        if body.address.id is -1:
+            await add_address(db, employee_id=body.id, body=body.address)
+        else:
+            await patch_address(db, body.address)
 
     patched_employee: Employee = await repository.patch_employee(db, employee)
 
@@ -135,7 +155,12 @@ async def add_address(
     if not employee:
         raise NotFoundException(f"Employee {employee_id} not found")
 
-    address = Address(**body.model_dump())
+    address = Address()
+    address.line1 = body.line1
+    address.city = body.city
+    address.country = body.country
+    address.postal_code = body.postal_code
+
     address.employee_id = employee_id
 
     added_address = await repository.add_address(
@@ -156,3 +181,26 @@ async def get_addresses(db: AsyncSession, employee_id: int) -> list[Address]:
     )
 
     return addresses
+
+
+async def patch_address(db: AsyncSession, body: AddressCreate):
+    address: Address = await repository.get_address_by_id(db, body.id)
+
+    if address is None:
+        raise NotFoundException(f"Address with id {body.id} is not found")
+
+    if body.line1 is not None:
+        address.line1 = body.line1
+
+    if body.city is not None:
+        address.city = body.city
+
+    if body.postal_code is not None:
+        address.postal_code = body.postal_code
+
+    if body.country is not None:
+        address.country = body.country
+
+    address = await repository.patch_address(db, address)
+
+    return address

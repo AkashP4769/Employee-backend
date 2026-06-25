@@ -5,7 +5,7 @@ from datetime import datetime
 
 from models import employee_departments
 from models.address import Address
-from models.employee import Employee
+from models.employee import Employee, Status
 from exceptions import ConflictException, DBException, NotFoundException
 
 
@@ -22,15 +22,21 @@ async def create(db: AsyncSession, employee: Employee) -> Employee:
     return employee
 
 
-async def get_all(db: AsyncSession) -> list[Employee]:
-    stmt = select(Employee).where(Employee.deleted_at.is_(None))
+async def get_all(db: AsyncSession, status: Status | None) -> list[Employee]:
+    # get all employees and sort them by id
+    stmt = select(Employee).where(Employee.deleted_at.is_(None)).order_by(Employee.id)
+    if status is not None:
+        stmt = stmt.where(Employee.status == status)
+
     result = await db.scalars(stmt)
 
     return result.all()
 
 
 async def get_employee_by_id(db: AsyncSession, employee_id: int) -> Employee:
-    stmt = select(Employee).where(Employee.id == employee_id)
+    stmt = select(Employee).where(
+        Employee.id == employee_id, Employee.deleted_at.is_(None)
+    )
     result = await db.scalars(stmt)
 
     return result.first()
@@ -159,3 +165,17 @@ async def get_addresses_by_employee_id(
     res = await db.scalars(stmt)
 
     return res.all()
+
+
+async def patch_address(db, address):
+    try:
+        await db.commit()
+    except IntegrityError:
+        await db.rollback()
+        raise DBException(
+            detail=f"Error during patching of address of id {address.id} in db"
+        )
+
+    await db.refresh(address)
+
+    return address

@@ -2,7 +2,7 @@ from pydantic import BaseModel, EmailStr, Field, ConfigDict
 from pydantic import field_validator, model_validator
 from datetime import datetime
 
-from models.employee import EmployeeRole
+from models.employee import EmployeeRole, Status
 
 
 class AddressCreate(BaseModel):
@@ -35,6 +35,22 @@ class AddressCreate(BaseModel):
         return self
 
 
+class AddressResponse(BaseModel):
+    id: int
+    line1: str
+    city: str
+    postal_code: str
+    country: str
+
+
+class AddressPatch(BaseModel):
+    id: int
+    line1: str
+    city: str
+    postal_code: str
+    country: str
+
+
 class EmployeeCreate(BaseModel):
     name: str = Field(min_length=3, max_length=100)
     email: EmailStr
@@ -43,15 +59,21 @@ class EmployeeCreate(BaseModel):
     )
     age: int = Field(ge=18, le=69)
     role: EmployeeRole = EmployeeRole.DEVELOPER
-    address: AddressCreate | None = None
+    address: AddressCreate | None = (None,)
+    experience: int
+    status: Status
 
 
 class EmployeePatch(BaseModel):
+    id: int
     name: str | None = Field(min_length=3, max_length=100, default=None)
     email: EmailStr | None = None
     password: str | None = Field(min_length=6, default=None)
     age: int | None = Field(ge=18, le=69, default=None)
     role: EmployeeRole = EmployeeRole.DEVELOPER
+    address: AddressPatch | None = (None,)
+    experience: int
+    status: Status
 
 
 class EmployeeResponse(BaseModel):
@@ -60,22 +82,18 @@ class EmployeeResponse(BaseModel):
     email: str
     age: int | None
     role: str
+    created_at: datetime
+
+    experience: int
+    status: Status
 
     model_config = ConfigDict(from_attributes=True)
 
 
 class GetEmployeeResponse(EmployeeResponse):
-    created_at: datetime
     updated_at: datetime
 
 
 class EmployeeDepartmentResponse(BaseModel):
     employee_id: int
     department_id: int
-
-
-class AddressResponse(BaseModel):
-    line1: str
-    city: str
-    postal_code: str
-    country: str

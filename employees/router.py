@@ -15,6 +15,7 @@ from employees.schemas import (
 )
 from employees.schemas import EmployeeDepartmentResponse
 import employees.service as service
+from models.employee import Status
 
 
 router = APIRouter(prefix="/employee", tags=["Employees"])
@@ -37,10 +38,11 @@ async def create_employee(
 
 @router.get("", response_model=list[EmployeeResponse])
 async def get_all_employees(
+    status: Status = None,
     db: AsyncSession = Depends(get_db),
     _current_user: TokenPayload = Depends(get_current_user),
 ) -> list[Employee]:
-    employees: Employee = await service.get_all_emp(db)
+    employees: Employee = await service.get_all_emp(db, status)
 
     return [emp for emp in employees]
 

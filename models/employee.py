@@ -25,6 +25,12 @@ class EmployeeRole(str, enum.Enum):
     HR = "HR"
 
 
+class Status(str, enum.Enum):
+    ACTIVE = "Active"
+    INACTIVE = "Inactive"
+    PROBATION = "Probation"
+
+
 class Employee(Entity):
     __abstract__ = False
     __tablename__ = "employees"
@@ -34,6 +40,14 @@ class Employee(Entity):
     age: Mapped[int] = mapped_column(Integer, nullable=True)
 
     password_hash: Mapped[int] = mapped_column(String(255), nullable=False)
+    experience: Mapped[int] = mapped_column(Integer, nullable=False)
+    status: Mapped[Status] = mapped_column(
+        Enum(
+            Status,
+            name="status",
+            values_callable=lambda enum_cls: [e.value for e in enum_cls],
+        )
+    )
 
     role: Mapped[EmployeeRole] = mapped_column(
         Enum(
