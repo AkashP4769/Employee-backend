@@ -11,3 +11,6 @@ class Department(Entity):
     employees: Mapped[list["Employee"]] = relationship(  # noqa: F821
         secondary="employee_departments", back_populates="departments"
     )
+
+    def __repr__(self) -> str:
+        return f"Department(id={self.id}, name={self.name})"

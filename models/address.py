@@ -21,3 +21,6 @@ class Address(Entity):
     )
 
     employee: Mapped["Employee"] = relationship("Employee", back_populates="addresses")
+
+    def __repr__(self) -> str:
+        return f"Address(id={self.id}, line1={self.line1}, city={self.city}, postal_code={self.postal_code}, country={self.country})"
