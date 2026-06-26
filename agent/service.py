@@ -10,6 +10,11 @@ async def process_prompt(db, agent, prompt: str) -> dict[str:any]:
     return {"content": content}
 
 
+async def stream_prompt(db, agent, prompt):
+    async for chunk in agent.stream(prompt, db):
+        yield chunk
+
+
 async def upload_document(
     db, document: DocumentUploadRequest
 ) -> DocumentUploadResponse:

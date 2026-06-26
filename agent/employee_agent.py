@@ -9,10 +9,11 @@ from agent.tools import (
     make_search_employee_by_id,
 )
 
-SYSTEM_PROMPT = """You are a helpful assistant that can answer questions and perform tasks for employees.
-Help the user with their queries and provide relevant information.
+SYSTEM_PROMPT = """You are a helpful assistant EmployeeBot that can answer questions and perform tasks for HR employees.
+Help the user with their queries and provide relevant information and do not assistent in topics other than what an employee management bot should do.
 Format the response in a clear and concise manner. If you need to perform a task, use the appropriate tool and provide the output in your response.
-Do not use any markup or formatting in your response.
+When asked about the policy documents, provide information only from the available policy documents. Format it and make it concise. If you cannot find the information, respond with "I could not find the information in the policy documents."
+Do not use any markup in your response and make it short.
 """
 
 TOOLS_BY_NAME = {
@@ -39,13 +40,20 @@ class EmployeeAgent:
             SystemMessage(content=SYSTEM_PROMPT),
         ]
 
-    # def call_tool(self, call):
-    #     # raise ValueError("mocking error")
-    #     return self.TOOLS_BY_NAME[call["name"]].invoke(call["args"])
+    async def stream(self, prompt: str, db):
+        tools = [
+            search_in_policy_documents,
+            make_search_employee_by_id(db),
+            make_search_address_by_employee_id(db),
+        ]
+        agent = create_agent(self.llm, tools)
+        self.messages.append(HumanMessage(content=prompt))
 
-    # def process_prompt(self, prompt):
-    #     self.messages.append(HumanMessage(prompt))
-    #     return self.run_loop()
+        async for message, metadata in agent.astream(
+            {"messages": self.messages},
+            stream_mode="messages",
+        ):
+            yield message.content
 
     async def process_prompt(
         self,
@@ -65,43 +73,6 @@ class EmployeeAgent:
         result = await agent.ainvoke({"messages": self.messages})
 
         return result["messages"][-1].content
-
-    # def run_loop(self):
-    #     MAX_ITERATION = 10
-    #     TOKEN_BUDGET = 1000
-    #     fails = 0
-    #     token_used = 0
-
-    #     for step in range(MAX_ITERATION):
-    #         if token_used > TOKEN_BUDGET:
-    #             return "Stopping: Token budget exceeded"
-
-    #         ai = self.agent.ai({
-    #             "messages": self.messages,
-    #         })
-    #         self.messages.append(ai)
-
-    #         token_used += ai.usage_metadata["total_tokens"]
-
-    #         if not ai.tool_calls:
-    #             return ai.content
-
-    #         for call in ai.tool_calls:
-    #             try:
-    #                 tool_output = self.call_tool(call)
-
-    #             except Exception as e:
-    #                 tool_output = f"Error: {str(e)}"
-    #                 fails += 1
-    #                 print(f"failed: {fails}: Error: {tool_output}")
-    #                 time.sleep(0.5 * fails)
-
-    #             if fails >= 3:
-    #                 return tool_output
-
-    #             self.messages.append(
-    #                 ToolMessage(tool_output, tool_call_id=call["id"]),
-    #             )
 
 
 agent_map = {}
